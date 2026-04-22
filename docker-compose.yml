@@ -1,0 +1,72 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hydro_postgres
+    environment:
+      POSTGRES_DB: hydropower
+      POSTGRES_USER: hydro_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hydro_secret_2024}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./server/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U hydro_user -d hydropower']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: hydro_redis
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: ./server
+      dockerfile: ../docker/Dockerfile.server
+    container_name: hydro_server
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://hydro_user:${POSTGRES_PASSWORD:-hydro_secret_2024}@postgres:5432/hydropower
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-hydropower_jwt_secret_change_in_production}
+      JWT_EXPIRES_IN: 24h
+      PORT: 5000
+      OPC_UA_ENDPOINT: ${OPC_UA_ENDPOINT:-opc.tcp://localhost:4840}
+      POLL_INTERVAL_MS: ${POLL_INTERVAL_MS:-10000}
+      SCADA_SIMULATOR: ${SCADA_SIMULATOR:-true}
+    ports:
+      - '5000:5000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./server/logs:/app/logs
+
+  client:
+    build:
+      context: ./client
+      dockerfile: ../docker/Dockerfile.client
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:5000/api}
+        REACT_APP_WS_URL: ${REACT_APP_WS_URL:-ws://localhost:5000}
+    container_name: hydro_client
+    ports:
+      - '80:80'
+    depends_on:
+      - server
+
+volumes:
+  postgres_data:
