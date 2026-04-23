@@ -2,13 +2,14 @@
   "name": "hydropower-server",
   "version": "1.0.0",
   "description": "Hydropower Plant Monitoring System - Backend API",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "seed": "node seeds/seed.js",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "seed": "ts-node seeds/seed.ts",
     "migrate": "node scripts/migrate.js",
-    "lint": "eslint src --ext .js"
+    "lint": "eslint src --ext .ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -34,7 +35,21 @@
     "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/compression": "^1.8.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^25.6.0",
+    "@types/node-cron": "^3.0.11",
+    "@types/pdfkit": "^0.17.6",
+    "@types/pg": "^8.20.0",
+    "@types/uuid": "^11.0.0",
+    "@types/winston": "^2.4.4",
     "eslint": "^8.57.0",
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
   }
 }
